@@ -2,6 +2,8 @@ import numpy
 import FreeCAD as App
 import FreeCADGui, Part, os
 from PySide import QtGui, QtCore, QtSvg
+from textSvg import SvgTextRenderer, SvgTextParser
+import traceback
 
 __dir__ = os.path.dirname(__file__)
 iconPath = os.path.join( __dir__, 'Resources', 'icons' )
@@ -18,6 +20,15 @@ def findUnusedObjectName(base, counterStart=1, fmt='%03i'):
         i = i + 1
         objName = '%s%s' % (base, fmt%i)
     return objName
+
+def errorMessagebox_with_traceback(title='Error'):
+    'for also those PySide linked codes where the Python debugger does not work...'
+    App.Console.PrintError(traceback.format_exc())
+    QtGui.QMessageBox.critical( 
+        QtGui.qApp.activeWindow(), 
+        title,
+        traceback.format_exc(),
+        )
 
 notDrawingPage_title = "Current Window not showing a Drawing Page"
 notDrawingPage_msg =  "Drawing Dimensioning tools are for page objects generated using the Drawing workbench. Aborting operation."
@@ -84,7 +95,6 @@ class DrawingPageGUIVars:
 
 defaultRealParameters = {
     'strokeWidth': 0.3,
-    'fontSize': 4.0,
     'arrowL1': 3.0,
     'arrowL2': 1.0,
     'arrowW': 2.0,
@@ -94,6 +104,7 @@ defaultRealParameters = {
     'centerLine_len_gap': 2.0,
     'centerLine_len_dash': 6.0,
     'centerLine_len_dot': 2.0,
+    'centerLine_width': 0.3,
 }
 
 def unsignedToRGBText(v):
@@ -107,11 +118,17 @@ def RGBtoUnsigned(r,g,b):
 
 defaultColorParameters = {
     'lineColor' : RGBtoUnsigned(0, 0, 255),
-    'fontColor' : RGBtoUnsigned(255, 0, 0) 
+    'centerLine_color' : RGBtoUnsigned(0, 0, 255),
+}
+
+defaultTextParameters = {
+    'textRenderer_family':'Verdana',
+    'textRenderer_size':'3.6',
+    'textRenderer_color': RGBtoUnsigned(255, 0, 0),
 }
 
 class DimensioningProcessTracker:
-    def activate( self, drawingVars, realParms=[], colorParms=[]):
+    def activate( self, drawingVars, realParms=[], colorParms=[], textParms=[]):
         V = drawingVars #short hand
         self.drawingVars = V
         self.stage = 0
@@ -122,6 +139,11 @@ class DimensioningProcessTracker:
             KWs[name] = parms.GetFloat( name, defaultRealParameters[name] )
         for cName in colorParms:
             KWs[cName] = unsignedToRGBText( parms.GetUnsigned(cName, defaultColorParameters[cName]) )
+        for prefix in textParms:
+            family = parms.GetString( prefix+'_family', defaultTextParameters[ prefix+'_family' ])
+            size = parms.GetString( prefix+'_size', defaultTextParameters[ prefix+'_size' ])
+            color = unsignedToRGBText(  parms.GetUnsigned(prefix+'_color', defaultTextParameters[ prefix+'_color' ] ) )
+            KWs[prefix] = SvgTextRenderer(family, size, color)
         self.dimensionConstructorKWs = KWs
         debugPrint(3, 'dimensionConstructorKWs %s' % self.dimensionConstructorKWs )
         self.svg_preview_KWs = {
@@ -205,3 +227,4 @@ def printGraphicsViewInfo( drawingVars ):
     #debugPrint(4,'    [ %1.2f  %1.2f  %1.2f ]' % (T.m11(), T.m12(), T.m13() ))
     #debugPrint(4,'M = [ %1.2f  %1.2f  %1.2f ]' % (T.m21(), T.m22(), T.m23() ))
     #debugPrint(4,'    [ %1.2f  %1.2f  %1.2f ]' % (T.m31(), T.m32(), T.m33() ))
+

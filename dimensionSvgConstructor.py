@@ -7,6 +7,7 @@ library for constructing dimension SVGs
 import numpy
 from numpy import dot, pi, arctan2, sin, cos, arccos
 from numpy.linalg import norm
+from textSvg import SvgTextRenderer
 
 def directionVector( A, B ):
     if norm(B-A) == 0:
@@ -36,7 +37,9 @@ def dimensionText( V, formatStr, roundingDigit=6):
     s2 = (formatStr % Vrounded).rstrip('0').rstrip('.')
     return s2 if len(s2) < len(s1) else s1
 
-def linearDimensionSVG( x1, y1, x2, y2, x3, y3, x4=None, y4=None, scale=1.0, textFormat='%3.3f',  gap_datum_points = 2, dimension_line_overshoot=1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', fontSize=4, strokeWidth=0.5, lineColor='blue', fontColor='red'):
+defaultTextRenderer = SvgTextRenderer(font_family='Verdana', font_size='5pt', fill="red")
+
+def linearDimensionSVG( x1, y1, x2, y2, x3, y3, x4=None, y4=None, scale=1.0, textFormat='%3.3f',  gap_datum_points = 2, dimension_line_overshoot=1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue', textRenderer=defaultTextRenderer):
     lines = []
     p1 = numpy.array([ x1, y1 ])
     p2 = numpy.array([ x2, y2 ])
@@ -65,9 +68,7 @@ def linearDimensionSVG( x1, y1, x2, y2, x3, y3, x4=None, y4=None, scale=1.0, tex
     lineXML = '\n'.join( lineTemplate % tuple(line) for line in lines )
     if x4 <> None and y4 <> None:
         v = numpy.linalg.norm(A-B)*scale
-        textXML = '<text x="%f" y="%f" fill="%s" style="font-size:%f" transform="rotate(%f %f,%f)">%s</text>' % ( x4, y4, fontColor, fontSize, textRotation, x4, y4, dimensionText(v,textFormat))
-        textXML = textXML + '\n <!--%s-->' % v
-        textXML = textXML + '\n <!--%s-->' % textFormat
+        textXML = textRenderer( x4, y4, dimensionText(v,textFormat), rotation=textRotation )
     else :
         textXML = ''
     distAB = numpy.linalg.norm(A-B)
@@ -85,7 +86,7 @@ def linearDimensionSVG( x1, y1, x2, y2, x3, y3, x4=None, y4=None, scale=1.0, tex
     return XML
 
 
-def circularDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, text_x=None, text_y=None, textFormat='Ø%3.3f', centerPointDia = 1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', fontSize=4, strokeWidth=0.5, dimScale=1.0, lineColor='blue', fontColor='red'):
+def circularDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, text_x=None, text_y=None, textFormat='Ø%3.3f', centerPointDia = 1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, dimScale=1.0, lineColor='blue', textRenderer=defaultTextRenderer):
     XML_body = [ ' <circle cx ="%f" cy ="%f" r="%f" stroke="none" fill="%s" /> ' % (center_x, center_y, centerPointDia*0.5, lineColor) ]
     #XML_body.append( '<circle cx="%f" cy="%f" r="%f" stroke="rgb(0,0,255)" stroke-width="%1.2f" fill="none" />' % (center_x, center_y, radius, strokeWidth) )
     if radialLine_x <> None and radialLine_y <> None:
@@ -100,7 +101,7 @@ def circularDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialL
         if tail_x <> None and tail_y <> None:
             XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % (radialLine_x, radialLine_y, tail_x, radialLine_y, lineColor, strokeWidth) )
     if text_x <> None and text_y <> None:
-        XML_body.append( '<text x="%f" y="%f" fill="%s" style="font-size:%i">%s</text>' % ( text_x, text_y, fontColor, fontSize, dimensionText(2*radius*dimScale,textFormat)))
+        XML_body.append( textRenderer( text_x, text_y, dimensionText(2*radius*dimScale,textFormat) ))
         XML_body.append( '<!--%s-->' % (2*radius) )
         XML_body.append( '<!--%s-->' % (textFormat) )
     XML = '''<%s  %s >
@@ -108,7 +109,7 @@ def circularDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialL
 </%s> ''' % ( svgTag, svgParms, "\n".join(XML_body), svgTag )
     return XML
 
-def radiusDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, text_x=None, text_y=None, textFormat='R%3.3f', centerPointDia = 1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', fontSize=4, strokeWidth=0.5, dimScale=1.0, lineColor='blue', fontColor='red'):
+def radiusDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, text_x=None, text_y=None, textFormat='R%3.3f', centerPointDia = 1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, dimScale=1.0, lineColor='blue', textRenderer=defaultTextRenderer):
     XML_body = [ ' <circle cx ="%f" cy ="%f" r="%f" stroke="none" fill="%s" /> ' % (center_x, center_y, centerPointDia*0.5, lineColor) ]
     if radialLine_x <> None and radialLine_y <> None:
         theta = numpy.arctan2( radialLine_y - center_y, radialLine_x - center_x )
@@ -121,7 +122,7 @@ def radiusDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLin
         if tail_x <> None and tail_y <> None:
             XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % (radialLine_x, radialLine_y, tail_x, radialLine_y, lineColor, strokeWidth) )
     if text_x <> None and text_y <> None:
-        XML_body.append( '<text x="%f" y="%f" fill="%s" style="font-size:%i">%s</text>' % ( text_x, text_y, fontColor, fontSize, dimensionText(radius*dimScale,textFormat)))
+        XML_body.append( textRenderer( text_x, text_y, dimensionText(radius*dimScale,textFormat)) )
         XML_body.append( '<!--%s-->' % (radius) )
         XML_body.append( '<!--%s-->' % (textFormat) )
     XML = '''<%s  %s >
@@ -133,8 +134,8 @@ def radiusDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLin
 def noteCircleSVG( start_x, start_y,
                    radialLine_x=None, radialLine_y=None,
                    tail_x=None, tail_y=None,
-                   textFormat='R%3.3f', centerPointDia = 1, svgTag='g', svgParms='', fontSize=4,
-                   strokeWidth=0.5, dimScale=1.0, lineColor='blue', fontColor='red'):
+                   textFormat='R%3.3f', centerPointDia = 1, svgTag='g', svgParms='',
+                   strokeWidth=0.5, dimScale=1.0, lineColor='blue', textRenderer=defaultTextRenderer):
     XML_body = [ ]
     if radialLine_x <> None and radialLine_y <> None:
         XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % (radialLine_x, radialLine_y, start_x, start_y, lineColor, strokeWidth) )
@@ -142,7 +143,7 @@ def noteCircleSVG( start_x, start_y,
             XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % (radialLine_x, radialLine_y, tail_x, radialLine_y, lineColor, strokeWidth) )
             XML_body.append(' <circle cx ="%f" cy ="%f" r="%f" stroke="%s" fill="white" /> ' % (tail_x, radialLine_y, 4.5, lineColor) )
             notenum = 0
-            XML_body.append( '<text x="%f" y="%f" fill="%s" style="font-size:%i">%s</text>' % ( tail_x - 1.5, radialLine_y + 1.5, fontColor, fontSize, '0'))
+            XML_body.append( textRenderer( tail_x - 1.5, radialLine_y + 1.5, '0') )
             XML_body.append( '<!--%s-->' % (notenum) )
             XML_body.append( '<!--%s-->' % (textFormat) )
     XML = '''<%s  %s >
@@ -172,7 +173,7 @@ def lineIntersection(line1, line2):
     return x_int, y_int
 
 def angularDimensionSVG( line1, line2, x_baseline, y_baseline, x_text=None, y_text=None, textFormat='%3.1f°',  gap_datum_points = 2, dimension_line_overshoot=1,
-                         arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', fontSize=4, strokeWidth=0.5, lineColor='blue', fontColor='red'):
+                         arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue', textRenderer=defaultTextRenderer):
     XML = []
     x_int, y_int = lineIntersection(line1, line2)
     #XML.append( '<circle cx ="%f" cy ="%f" r="4" stroke="none" fill="rgb(0,0,255)" /> ' % (x_int, y_int) ) #for debugging
@@ -226,7 +227,7 @@ def angularDimensionSVG( line1, line2, x_baseline, y_baseline, x_text=None, y_te
     if x_text <> None and y_text <> None:
         v = arccos( numpy.dot(d1, d2) )/ pi * 180
         textRotation = numpy.arctan2( y_text - y_int, x_text - x_int)
-        textXML = '<text x="%f" y="%f" fill="%s" style="font-size:%i" transform="rotate(%f %f,%f)">%s</text>' % ( x_text, y_text, fontColor, fontSize, textRotation, x_text, y_text, dimensionText(v,textFormat))
+        textXML = textRenderer( x_text, y_text, dimensionText(v,textFormat), textRotation)
         textXML = textXML + '\n <!--%s-->' % v
         textXML = textXML + '\n <!--%s-->' % textFormat
         XML.append( textXML )
@@ -350,9 +351,55 @@ def _centerLinesSVG( center, topLeft, bottomRight, dimScale, centerLine_len_dot,
 </%s> ''' % ( svgTag, svgParms, dimScale, dimScale, lineColor, strokeWidth/ dimScale, "\n".join(XML_body), svgTag )
 
 
-def centerLinesSVG( center, topLeft, bottomRight=None, dimScale=1.0, centerLine_len_dot=2.0, centerLine_len_dash=6.0, centerLine_len_gap=2.0, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue'):
-    return _centerLinesSVG( center, topLeft, bottomRight, dimScale, centerLine_len_dot, centerLine_len_dash, centerLine_len_gap, svgTag, svgParms, strokeWidth, lineColor, True, True )
+def centerLinesSVG( center, topLeft, bottomRight=None, dimScale=1.0, centerLine_len_dot=2.0, centerLine_len_dash=6.0, centerLine_len_gap=2.0, svgTag='g', svgParms='', centerLine_width=0.5, centerLine_color='blue'):
+    return _centerLinesSVG( center, topLeft, bottomRight, dimScale, centerLine_len_dot, centerLine_len_dash, centerLine_len_gap, svgTag, svgParms, centerLine_width, centerLine_color, True, True )
 
-def centerLineSVG( center, topLeft, bottomRight=None,  dimScale=1.0, centerLine_len_dot=2.0, centerLine_len_dash=6.0, centerLine_len_gap=2.0, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue'):
+def centerLineSVG( center, topLeft, bottomRight=None,  dimScale=1.0, centerLine_len_dot=2.0, centerLine_len_dash=6.0, centerLine_len_gap=2.0, svgTag='g', svgParms='', centerLine_width=0.5, centerLine_color='blue'):
     v = abs(center[0] - topLeft[0]) < abs(center[1] - topLeft[1]) #vertical
-    return _centerLinesSVG( center, topLeft, bottomRight, dimScale, centerLine_len_dot, centerLine_len_dash, centerLine_len_gap, svgTag, svgParms, strokeWidth, lineColor, v, not v )
+    return _centerLinesSVG( center, topLeft, bottomRight, dimScale, centerLine_len_dot, centerLine_len_dash, centerLine_len_gap, svgTag, svgParms, centerLine_width, centerLine_color, v, not v )
+
+
+
+def distanceBetweenParallelsSVG( line1, line2, x_baseline, y_baseline, x_text=None, y_text=None, textFormat='%3.3f', scale=1.0, gap_datum_points = 2, dimension_line_overshoot=1,
+                                 arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue', textRenderer=defaultTextRenderer):
+    XML = []
+    p1 = numpy.array( [line1[0], line1[1]] )
+    p2 = numpy.array( [line1[2], line1[3]] )
+    p3 = numpy.array( [line2[0], line2[1]] )
+    p4 = numpy.array( [line2[2], line2[3]] )
+    p5 = numpy.array([ x_baseline, y_baseline ])
+    d = directionVector(p1,p2)
+    # arrow positions
+    p_arrow1 = p1 + d*dot(d, p5-p1)
+    p_arrow2 = p3 + d*dot(d, p5-p3)
+    p_center = (p_arrow1 + p_arrow2)/2
+    def line_to_arrow_point( a, b, c): # where a=p1,b=p2 or a=p3,b=p4 and c=p_arrow1 or c=p_arrow2
+        if abs( norm(a -b) - (norm(a-c) + norm(b-c))) < norm(a -b)/1000:
+            return
+        if norm(a-c) < norm(b-c): #then closer to a
+            d_a =  directionVector(a, c)
+            v = a + gap_datum_points*d_a
+            w = c + dimension_line_overshoot*d_a
+        else:
+            d_b =  directionVector(b, c)
+            v = b + gap_datum_points*d_b
+            w = c + dimension_line_overshoot*d_b
+        XML.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%f" />' % (v[0],v[1],w[0],w[1], lineColor, strokeWidth) )
+    line_to_arrow_point( p1, p2, p_arrow1)
+    line_to_arrow_point( p3, p4, p_arrow2)
+    XML.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%f" />' % ( p_arrow1[0], p_arrow1[1], p_arrow2[0], p_arrow2[1], lineColor, strokeWidth) )
+    dist = norm(p_arrow1 - p_arrow2)
+    if dist > 0:
+        s = -1 if dist > 2.5*(arrowL1 + arrowL2) else 1
+    XML.append( arrowHeadSVG( p_arrow1,  directionVector(p_center, p_arrow1)*s, arrowL1, arrowL2, arrowW, lineColor ) )
+    XML.append( arrowHeadSVG( p_arrow2,  directionVector(p_center, p_arrow2)*s, arrowL1, arrowL2, arrowW, lineColor ) )
+    if x_text <> None and y_text <> None:
+        textRotation = numpy.arctan2( d[1], d[0]) / numpy.pi * 180 + 90
+        if textRotation > 90 or textRotation < -90:
+            textRotation = textRotation + 180
+        textXML = textRenderer( x_text, y_text, dimensionText(dist*scale,textFormat), rotation=textRotation)
+        XML.append( textXML )
+    XML = '''<%s  %s >
+ %s
+</%s> ''' % ( svgTag, svgParms, '\n'.join(XML), svgTag )
+    return XML
