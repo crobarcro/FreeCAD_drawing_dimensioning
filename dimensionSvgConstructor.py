@@ -5,7 +5,7 @@ library for constructing dimension SVGs
 
 
 import numpy
-from numpy import dot, pi, arctan2, sin, cos, arccos
+from numpy import dot, pi, arctan2, sin, cos, arccos, sqrt
 from numpy.linalg import norm
 from textSvg import SvgTextRenderer
 
@@ -129,6 +129,90 @@ def radiusDimensionSVG( center_x, center_y, radius, radialLine_x=None, radialLin
 %s
 </%s> ''' % ( svgTag, svgParms, "\n".join(XML_body), svgTag )
     return XML
+
+
+def radiusDimensionInnerSVG( center_x, center_y,
+                             radius,
+                             radialLine_x=None, radialLine_y=None,
+                             radialLine2_x=None, radialLine2_y=None,
+                             tail_x=None, tail_y=None,
+                             text_x=None, text_y=None,
+                             textFormat='R%3.3f', centerPointDia = 1, arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, dimScale=1.0, lineColor='blue', textRenderer=defaultTextRenderer):
+    """
+    Creates a radial dimension with the label drawn on the 'inside' of the radius,
+    and control over the length of the tail towards the centre point of the radius
+    """
+    # initialise the svg with a
+    XML_body = []
+    #XML_body = [ ' <circle cx ="%f" cy ="%f" r="%f" stroke="none" fill="%s" /> ' % (center_x, center_y, centerPointDia*0.5, lineColor) ]
+
+    if radialLine_x <> None and radialLine_y <> None:
+        # second stage of drawing, the radial line
+        # here we need to draw the arrow and a line going from the base of the
+        # arrow towards the centre of the circle, of length determined by the
+        # cursor position
+        theta = numpy.arctan2( radialLine_y - center_y, radialLine_x - center_x )
+
+        # create two vectors to be used to determine the direction the arrow should be
+        A = numpy.array([ center_x + radius*numpy.cos(theta) , center_y + radius*numpy.sin(theta) ])
+        B = numpy.array([ center_x - radius*numpy.cos(theta) , center_y - radius*numpy.sin(theta) ])
+
+        XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % (center_x + radius*numpy.cos(theta), center_y + radius*numpy.sin(theta),
+                                                                                                            radialLine_x, radialLine_y,
+                                                                                                            lineColor, strokeWidth) )
+        if radius > 0:
+
+            s = 1 if radius > arrowL1 + arrowL2 + 0.5*centerPointDia else -1
+
+            XML_body.append( arrowHeadSVG( A, s*directionVector(A,B), arrowL1, arrowL2, arrowW, lineColor ) )
+
+        if radialLine2_x <> None and radialLine2_y <> None:
+
+            # find the circle around the last point with radius where
+            # the cursor is
+            thisradius = sqrt ( (radialLine2_x  - radialLine_x)**2 + (radialLine2_y  - radialLine_y)**2 )
+            print ('thisradius {}'.format (thisradius))
+
+            if thisradius > 0:
+
+                #theta = numpy.arctan2( center_y - radialLine_y, center_x - radialLine_x )
+                #print ('theta {}'.format (theta))
+
+                # create two vectors to be used to determine the direction the arrow should be
+                A = numpy.array([ radialLine_x, radialLine_y ])
+                B = numpy.array([ center_x, center_y ])
+                vec = directionVector(A,B)
+
+                print (vec)
+
+                vec = vec * thisradius
+
+                print (vec)
+
+                # draw line from the last point to that radius in the
+                # direction of the last line
+                XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % ( radialLine_x, radialLine_y,
+                                                                                                                     radialLine_x + vec[0], radialLine_y + vec[1],
+                                                                                                                     lineColor, strokeWidth) )
+
+        if tail_x <> None and tail_y <> None:
+            # horizontal tail
+            XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % ( radialLine_x + vec[0], radialLine_y + vec[1],
+                                                                                                                 tail_x, radialLine_y + vec[1],
+                                                                                                                 lineColor, strokeWidth) )
+
+
+    if text_x <> None and text_y <> None:
+
+        XML_body.append( textRenderer( text_x, text_y, dimensionText(radius*dimScale,textFormat)) )
+        XML_body.append( '<!--%s-->' % (radius) )
+        XML_body.append( '<!--%s-->' % (textFormat) )
+    XML = '''<%s  %s >
+%s
+</%s> ''' % ( svgTag, svgParms, "\n".join(XML_body), svgTag )
+
+    return XML
+
 
 
 def noteCircleSVG( start_x, start_y,

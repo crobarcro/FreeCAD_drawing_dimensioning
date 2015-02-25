@@ -15,7 +15,7 @@
    id="svg3085"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="radiusDimension.svg">
+   sodipodi:docname="radiusDimensionInner.svg">
   <defs
      id="defs3087">
     <inkscape:path-effect
@@ -176,9 +176,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="-4.7051375"
-     inkscape:cy="14.311323"
+     inkscape:zoom="11.313709"
+     inkscape:cx="-7.148313"
+     inkscape:cy="13.893073"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:grid-bbox="true"
@@ -196,7 +196,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -207,10 +207,10 @@
     <rect
        style="fill:#0009ff;fill-opacity:1;stroke:#0009ff;stroke-width:0.11652304;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="rect3018-4"
-       width="1.5799452"
-       height="42.338055"
-       x="-1.2740809"
-       y="-44.702961"
+       width="1.4821672"
+       height="16.273548"
+       x="-1.3908937"
+       y="-37.264"
        transform="matrix(-0.69932524,0.71480361,-0.69932524,-0.71480361,0,0)" />
     <path
        sodipodi:type="arc"
@@ -228,12 +228,12 @@
        id="path3062"
        inkscape:connector-curvature="0" />
     <rect
-       style="fill:#0009ff;fill-opacity:1;stroke:#0009ff;stroke-width:0.07119173;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       id="rect3018-4-9"
-       width="1.6206015"
-       height="15.407498"
-       x="0.70346397"
-       y="-17.94467"
-       transform="matrix(0.00639825,0.99997953,-0.99994098,-0.01086481,0,0)" />
+       style="fill:#0009ff;fill-opacity:1;stroke:#0009ff;stroke-width:0.11652304;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3018-4-6"
+       width="1.4821672"
+       height="16.273548"
+       x="25.078138"
+       y="-25.290051"
+       transform="matrix(0.01689508,0.99985727,-0.99998753,-0.00499426,0,0)" />
   </g>
 </svg>
