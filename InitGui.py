@@ -61,8 +61,26 @@ static char * linearDimension_xpm[] = {
             else:
                 crudeDebugger.printingDebugging( os.path.join(__dir__, module + '.py') )
                 importlib.import_module(  module + '_crudeDebugging')
-        commandslist = ['linearDimension', 'circularDimension', 'radiusDimension', 'radiusDimensionInner', 'angularDimension', 'angleFrom3PointsDimension', 'DrawingDimensioning_centerLines', 'DrawingDimensioning_centerLine', 'noteCircle', 'textAddDimensioning','textEditDimensioning', 'textMoveDimensioning', 'toleranceAdd', 'deleteDimension', 'escapeDimensioning']
+        commandslist = ['linearDimension', 
+                        'circularDimension', 
+                        'radiusDimension', 
+                        'radiusDimensionInner', 
+                        'angularDimension', 
+                        'angleFrom3PointsDimension', 
+                        'DrawingDimensioning_centerLines', 
+                        'DrawingDimensioning_centerLine', 
+                        'noteCircle', 
+                        'textAddDimensioning',
+                        'textEditDimensioning', 
+                        'textMoveDimensioning', 
+                        'toleranceAdd', 
+#            'DrawingDimensioning_drawLine',
+#            'DrawingDimensioning_drawArrowWithTail',
+#            'DrawingDimensioning_weldingSymbols',
+                        'deleteDimension', 
+                        'escapeDimensioning']
         self.appendToolbar('Drawing Dimensioning', commandslist)
+        self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingSymbols.weldingCmds)
         FreeCADGui.addIconPath(iconPath)
         FreeCADGui.addPreferencePage( os.path.join( __dir__, 'Resources', 'ui', 'drawing_dimensioing_prefs-base.ui'),'Drawing Dimensioning' )
 
