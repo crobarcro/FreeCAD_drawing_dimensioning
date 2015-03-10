@@ -175,19 +175,12 @@ def radiusDimensionInnerSVG( center_x, center_y,
 
             if thisradius > 0:
 
-                #theta = numpy.arctan2( center_y - radialLine_y, center_x - radialLine_x )
-                #print ('theta {}'.format (theta))
-
                 # create two vectors to be used to determine the direction the arrow should be
                 A = numpy.array([ radialLine_x, radialLine_y ])
                 B = numpy.array([ center_x, center_y ])
                 vec = directionVector(A,B)
 
-                print (vec)
-
                 vec = vec * thisradius
-
-                print (vec)
 
                 # draw line from the last point to that radius in the
                 # direction of the last line
@@ -200,7 +193,6 @@ def radiusDimensionInnerSVG( center_x, center_y,
             XML_body.append( '<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke:%s;stroke-width:%1.2f" />' % ( radialLine_x + vec[0], radialLine_y + vec[1],
                                                                                                                  tail_x, radialLine_y + vec[1],
                                                                                                                  lineColor, strokeWidth) )
-
 
     if text_x <> None and text_y <> None:
 
