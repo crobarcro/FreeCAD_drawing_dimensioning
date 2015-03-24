@@ -52,33 +52,38 @@ static char * linearDimension_xpm[] = {
     def Initialize(self):
         import importlib, os
         from dimensioning import __dir__, debugPrint, iconPath
-        DEBUG=False
-        if DEBUG:
-            import crudeDebugger
-        for module in ['linearDimension', 'deleteDimension', 'circularDimension', 'textAdd', 'textEdit', 'textMove','escapeDimensioning', 'angularDimension' , 'angleFrom3PointsDimension', 'radiusDimension', 'radiusDimensionInner', 'centerLines', 'noteCircle', 'toleranceAdd']:
-            if not DEBUG:
-                importlib.import_module( module )
-            else:
-                crudeDebugger.printingDebugging( os.path.join(__dir__, module + '.py') )
-                importlib.import_module(  module + '_crudeDebugging')
-        commandslist = ['linearDimension', 
-                        'circularDimension', 
-                        'radiusDimension', 
-                        'radiusDimensionInner', 
-                        'angularDimension', 
-                        'angleFrom3PointsDimension', 
-                        'DrawingDimensioning_centerLines', 
-                        'DrawingDimensioning_centerLine', 
-                        'noteCircle', 
-                        'textAddDimensioning',
-                        'textEditDimensioning', 
-                        'textMoveDimensioning', 
-                        'toleranceAdd', 
-#            'DrawingDimensioning_drawLine',
-#            'DrawingDimensioning_drawArrowWithTail',
-#            'DrawingDimensioning_weldingSymbols',
-                        'deleteDimension', 
-                        'escapeDimensioning']
+        import linearDimension
+        import deleteDimension
+        import circularDimension
+        import textAdd
+        import textEdit
+        import textMove
+        import escapeDimensioning
+        import angularDimension
+        import angleFrom3PointsDimension
+        import radiusDimension
+        import radiusDimensionInner
+        import centerLines
+        import noteCircle
+        import toleranceAdd
+        import weldingSymbols
+        commandslist = [
+            'linearDimension',
+            'circularDimension',
+            'radiusDimension',
+            'radiusDimensionInner',
+            'angularDimension',
+            'angleFrom3PointsDimension',
+            'DrawingDimensioning_centerLines',
+            'DrawingDimensioning_centerLine', 
+            'noteCircle', 
+            'textAddDimensioning',
+            'textEditDimensioning',
+            'textMoveDimensioning',
+            'toleranceAdd', 
+            'deleteDimension', 
+            'escapeDimensioning'
+            ]
         self.appendToolbar('Drawing Dimensioning', commandslist)
         self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingSymbols.weldingCmds)
         FreeCADGui.addIconPath(iconPath)
