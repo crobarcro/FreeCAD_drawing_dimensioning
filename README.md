@@ -57,9 +57,15 @@ FreeCAD you will now have a new workbench-entry called "DrawingDimensioning".
 
 *Pyside and Numpy are integrated in the FreeCAD dev-Snapshots 0.15, so these Python packages do not need to be installed individually*
 
+Mac Installation Instructions
+-----------------------------
+
+Copy or unzip the drawing dimensioning folder to the directory *FreeCAD.app*/Contents/Mod
+
+where *FreeCAD.app* is the folder where FreeCAD is installed. (thanks PLChris)
 
 Setting your dimensioning preferences
------------------------------------
+-------------------------------------
 
 Unit preferences are taken from the General unit preferences (excluding number of decimal places!).
 To set unit preferences goto edit -> preferences -> general -> units
