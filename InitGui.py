@@ -66,7 +66,6 @@ static char * linearDimension_xpm[] = {
         import centerLines
         import noteCircle
         import toleranceAdd
-        import weldingSymbols
         commandslist = [
             'linearDimension',
             'circularDimension',
@@ -85,6 +84,15 @@ static char * linearDimension_xpm[] = {
             'escapeDimensioning'
             ]
         self.appendToolbar('Drawing Dimensioning', commandslist)
+        import unfold
+        import unfold_bending_note
+        import unfold_export_to_dxf
+        self.appendToolbar('Drawing Dimensioning Folding', [
+                'drawingDimensioning_unfold',
+                'drawingDimensioning_bendingNote',
+                'drawingDimensioning_exportToDxf',
+                ])
+        import weldingSymbols
         self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingSymbols.weldingCmds)
         FreeCADGui.addIconPath(iconPath)
         FreeCADGui.addPreferencePage( os.path.join( __dir__, 'Resources', 'ui', 'drawing_dimensioing_prefs-base.ui'),'Drawing Dimensioning' )
