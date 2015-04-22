@@ -81,7 +81,7 @@ static char * linearDimension_xpm[] = {
             'textMoveDimensioning',
             'toleranceAdd', 
             'deleteDimension', 
-            'escapeDimensioning'
+            'escapeDimensioning',
             ]
         self.appendToolbar('Drawing Dimensioning', commandslist)
         import unfold
