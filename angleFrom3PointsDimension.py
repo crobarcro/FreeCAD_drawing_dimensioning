@@ -66,7 +66,7 @@ maskHoverPen.setWidth(0.0)
 class angleFrom3PointsDimension:
     def Activated(self):
         V = getDrawingPageGUIVars()
-        dimensioning.activate(V, ['strokeWidth','fontSize','arrowL1','arrowL2','arrowW','gap_datum_points', 'dimension_line_overshoot'], ['lineColor','fontColor'] )
+        dimensioning.activate(V, ['strokeWidth','arrowL1','arrowL2','arrowW','gap_datum_points', 'dimension_line_overshoot'], ['lineColor'], ['textRenderer'] )
         commonArgs = dict(
             onClickFun=selectFun,
             transform = V.transform,

@@ -314,10 +314,12 @@ def angularDimensionSVG( line1, line2, x_baseline, y_baseline, x_text=None, y_te
 
 
 def angleFrom3PointsDimensionSVG( p1x, p1y, p2x, p2y, p3x, p3y, x_baseline, y_baseline,
-                                 x_text=None, y_text=None, textFormat='%3.1f°',
-                                 gap_datum_points = 2,
-                                 dimension_line_overshoot=1,
-                                 arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', fontSize=4, strokeWidth=0.5, lineColor='blue', fontColor='red'):
+                                  x_text=None, y_text=None, 
+                                  textFormat='%3.1f°',
+                                  gap_datum_points = 2,
+                                  dimension_line_overshoot=1,
+                                  arrowL1=3, arrowL2=1, arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5, lineColor='blue', 
+                                  textRenderer=defaultTextRenderer ):
     """
     Create an angle dimension by specifying three points, the center and two others
     """
@@ -381,7 +383,7 @@ def angleFrom3PointsDimensionSVG( p1x, p1y, p2x, p2y, p3x, p3y, x_baseline, y_ba
     if x_text <> None and y_text <> None:
         v = arccos( numpy.dot(d1, d2) )/ pi * 180
         textRotation = numpy.arctan2( y_text - p1y, x_text - p1x)
-        textXML = '<text x="%f" y="%f" fill="%s" style="font-size:%i" transform="rotate(%f %f,%f)">%s</text>' % ( x_text, y_text, fontColor, fontSize, textRotation, x_text, y_text, dimensionText(v,textFormat))
+        textXML = textRenderer( x_text, y_text, dimensionText(v,textFormat), textRotation)
         textXML = textXML + '\n <!--%s-->' % v
         textXML = textXML + '\n <!--%s-->' % textFormat
         XML.append( textXML )
