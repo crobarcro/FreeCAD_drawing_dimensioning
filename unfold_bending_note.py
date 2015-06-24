@@ -1,11 +1,29 @@
 # This Python file uses the following encoding: utf-8
 
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
 import previewDimension, selectionOverlay 
 from dimensionSvgConstructor import arrowHeadSVG, numpy, directionVector
 
-dimensioning = DimensioningProcessTracker()
+d = DimensioningProcessTracker()
+d.registerPreference( 'arrowL1')
+d.registerPreference( 'arrowL2')
+d.registerPreference( 'arrowW')
+d.registerPreference( 'strokeWidth' )
+d.registerPreference( 'lineColor' )
+d.registerPreference( 'textRenderer' )
+class angleText_widget:
+    default = unicode('90°','utf8')
+    def valueChanged( self, arg1):
+        d.angleText = arg1
+    def generateWidget( self, dimensioningProcess ):
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setText(self.default)
+        d.angleText = self.default
+        self.lineEdit.textChanged.connect(self.valueChanged)
+        return DimensioningTaskDialog_generate_row_hbox('angle text:', self.lineEdit)
+d.dialogWidgets.append( angleText_widget() )
+
+
 maskBrush  =   QtGui.QBrush( QtGui.QColor(0,160,0,100) )
 maskPen =      QtGui.QPen( QtGui.QColor(0,160,0,100) )
 maskPen.setWidth(0.0)
@@ -15,7 +33,7 @@ maskHoverPen.setWidth(0.0)
 class BendingNoteCommand:
     def Activated(self):
         V = getDrawingPageGUIVars()
-        dimensioning.activate(V, ['strokeWidth','arrowL1','arrowL2','arrowW'], ['lineColor'], ['textRenderer'] )
+        d.activate(V, dialogTitle='Add Bend Note', dialogIconPath=os.path.join( iconPath, 'bendingNote.svg'), endFunction=self.Activated )
         selectionOverlay.generateSelectionGraphicsItems( 
             [obj for obj in V.page.Group  if not obj.Name.startswith('dim') and not obj.Name.startswith('center')], 
             self.selectFun ,
@@ -31,32 +49,29 @@ class BendingNoteCommand:
 
     def selectFun(self, event, referer, elementXML, elementParms, elementViewObject ):
         x,y = elementParms['x'], elementParms['y']
-        dimensioning.dArgs = [x,y]
-        dimensioning.stage = 1
+        d.dArgs = [x,y]
+        d.stage = 1
         debugPrint(2, 'welding symbol to point at x=%3.1f y=%3.1f' % (x,y))
         selectionOverlay.hideSelectionGraphicsItems()
         previewDimension.initializePreview( 
-            dimensioning.drawingVars, 
-            self.clickFunPreview, 
-            self.hoverFunPreview )
+            d, 
+            self.preview_svgRenderer, 
+            self.preview_clickHandler )
 
     noOfStages = 3
-    def clickFunPreview( self, x, y ):
-        dimensioning.dArgs = dimensioning.dArgs + [x,y]
-        dimensioning.stage = dimensioning.stage + 1
-        if dimensioning.stage == self.noOfStages:
-            viewName = findUnusedObjectName('dimLine')
-            XML =  self.generateSvg( 
-                *dimensioning.dArgs,
-                 **dimensioning.dimensionConstructorKWs ) 
-            return viewName, XML
-        else:
-            return None,None
 
-    def hoverFunPreview(self,  x, y):
+    def preview_clickHandler( self, x, y ):
+        d.stage = d.stage + 1
+        if d.stage == self.noOfStages:
+            return 'createDimension:%s' % findUnusedObjectName('dimUnfold')
+        else:
+            d.dArgs = d.dArgs + [x,y]
+
+    def preview_svgRenderer(self,  x, y):
         return self.generateSvg( 
-            *(dimensioning.dArgs + [x, y]), 
-             **dimensioning.svg_preview_KWs 
+            *(d.dArgs + [x, y]), 
+            angleText = d.angleText,
+             **d.dimensionConstructorKWs 
              )
 
     def svgLine(self, x1, y1, x2, y2, clr=None):
@@ -73,8 +88,8 @@ class BendingNoteCommand:
         y2 = cy + r * numpy.sin(theta2)
         return '<path d = "M %f %f A %f %f 0 %i %i %f %f" style="stroke:%s;stroke-width:%1.2f;fill:none" />' % (x1,y1,r,r,largeArc,sweep, x2,y2, self.svg_lineColor, self.svg_strokeWidth ) 
 
-    def generateSvg(self,  c_x, c_y, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, 
-                    arrowL1=3,arrowL2=1,arrowW=2, svgTag='g', svgParms='', strokeWidth=0.5,  lineColor='blue', textRenderer=None):
+    def generateSvg(self,  c_x, c_y, radialLine_x=None, radialLine_y=None, tail_x=None, tail_y=None, angleText='90°',
+                    arrowL1=3,arrowL2=1,arrowW=2, strokeWidth=0.5,  lineColor='blue', textRenderer=None):
         self.svg_lineColor = lineColor
         self.svg_strokeWidth = strokeWidth
         XML_body = []
@@ -104,19 +119,16 @@ class BendingNoteCommand:
                 XML_body.append(  self.svgLine( x + 0.2*box_w, y + 0.8*box_w, x + 0.8*box_w , y + 0.8*box_w,  textRenderer.fill)  )
                 XML_body.append(  self.svgLine( x + 0.2*box_w, y + 0.8*box_w, x + 0.8*box_w , y + 0.2*box_w,  textRenderer.fill)  )
                 #text
-                XML_body.append( textRenderer(x + box_w*1.2, y+box_w*0.8, "90°") )
+                XML_body.append( textRenderer(x + box_w*1.2, y+box_w*0.8, angleText) )
 
 
-        return '''<%s  %s >
-%s
-</%s> ''' % ( svgTag, svgParms, "\n".join(XML_body), svgTag )
+        return '<g> %s </g> ''' % "\n".join(XML_body)
 
     def GetResources(self): 
         return {
-            #'Pixmap' : os.path.join( iconPath , 'drawLineWithArrow.svg' ) , 
             'Pixmap' : os.path.join( iconPath, 'bendingNote.svg'),
             'MenuText': 'bending note', 
             } 
 
 
-FreeCADGui.addCommand('drawingDimensioning_bendingNote', BendingNoteCommand())
+FreeCADGui.addCommand('dd_bendingNote', BendingNoteCommand())

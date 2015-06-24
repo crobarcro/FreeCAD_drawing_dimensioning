@@ -1,81 +1,53 @@
-'''
-Dialog notes
-Use Qt Designer to edit the textAddDialog.ui
-Once completed $ pyside-uic textAddDialog.ui > textAddDialog.py
-
-To test inside Freecad
-from addTextDialog import DialogWidget
-dialog = DialogWidget()
-dialogUi = addTextDialog.Ui_Dialog()
-dialogUi.setupUi(dialog)
-dialog.show()
-
-'''
-
+# This Python file uses the following encoding: utf-8
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
 import previewDimension
-import textAddDialog
+from dimensionSvgConstructor import *
 
-dimensioning = DimensioningProcessTracker()
-dimensioning.assignedPrefenceValues = False
+d = DimensioningProcessTracker()
 
-def textSVG( x, y, svgTag='g', svgParms=''):
-    XML = '''<%s  %s >
-%s
-</%s> ''' % ( svgTag, svgParms, dimensioning.textRenderer(x,y,dimensioning.text,rotation=dimensioning.rotation), svgTag )
-    debugPrint(4, 'textSVG.XML %s' % XML)
-    return XML
+def textSVG( x, y, text='text', rotation=0.0, textRenderer_addText= defaultTextRenderer):
+    return '<g> %s </g>' % textRenderer_addText(x,y,text,rotation=rotation)
 
-def clickEvent( x, y):
-    viewName = findUnusedObjectName('dimText')
-    XML = textSVG(x,y)
-    return viewName, XML
+d.registerPreference( 'textRenderer_addText', ['inherit','5', 0], 'text properties (AddText)', kind='font' )
 
-def hoverEvent( x, y):
-    return textSVG( x, y, svgTag=dimensioning.svg_preview_KWs['svgTag'], svgParms=dimensioning.svg_preview_KWs['svgParms'] )
-
-class AddTextDialogWidget( QtGui.QWidget ):
-    def accept( self ):
-        debugPrint(2, 'AddTextDialogWidget accept pressed')
-        widgets = dict( [c.objectName(), c] for c in self.children() )
-        debugPrint(2, 'widgets %s' % widgets)
-        if widgets['textLineEdit'].text() == '':
-            debugPrint(1, 'Aborting placing empty text.')
-            return
-        debugPrint(2, 'Placing "%s"' % widgets['textLineEdit'].text() )
-        self.hide()
-        dimensioning.text = widgets['textLineEdit'].text()
-        widgets['textLineEdit'].setText('')
-        family = widgets['familyLineEdit'].text()
-        size = widgets['sizeLineEdit'].text()
-        fill = widgets['colorLineEdit'].text()
-        dimensioning.textRenderer = SvgTextRenderer( family, size, fill )
-        dimensioning.rotation = widgets['doubleSpinBox_rotation'].value()
-        debugPrint(3,'textRenderer created')
-        debugPrint(3,'previewDimension.initializePreview')
-        previewDimension.initializePreview(
-            dimensioning.drawingVars,
-            clickEvent, 
-            hoverEvent )
+class text_widget:
+    def valueChanged( self, arg1):
+        d.text = arg1
+    def generateWidget( self, dimensioningProcess ):
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setText('text')
+        d.text = 'text'
+        self.lineEdit.textChanged.connect(self.valueChanged)
+        return self.lineEdit
+d.dialogWidgets.append( text_widget() )
+class rotation_widget:
+    def valueChanged( self, arg1):
+        d.rotation = arg1
+    def generateWidget( self, dimensioningProcess ):
+        self.spinbox = QtGui.QDoubleSpinBox()
+        self.spinbox.setValue(0)
+        d.rotation = 0
+        self.spinbox.setMinimum( -180 )
+        self.spinbox.setMaximum(  180 )
+        self.spinbox.setDecimals( 1 )
+        self.spinbox.setSingleStep( 5 )
+        self.spinbox.setSuffix(unicode('°','utf8'))
+        self.spinbox.valueChanged.connect(self.valueChanged)
+        return  DimensioningTaskDialog_generate_row_hbox('rotation', self.spinbox)
+d.dialogWidgets.append( rotation_widget() )
 
 
-dialog = AddTextDialogWidget()
-dialogUi = textAddDialog.Ui_Dialog()
-dialogUi.setupUi(dialog)
+def addText_preview(mouseX, mouseY):
+    return textSVG(mouseX, mouseY, d.text, d.rotation, **d.dimensionConstructorKWs )
+
+def addText_clickHandler( x, y ):
+    return 'createDimension:%s' % findUnusedObjectName('dimText')
 
 class AddText:
     def Activated(self):
-        V = getDrawingPageGUIVars() #needs to be done before dialog show, else active window is dialog and not freecad
-        dimensioning.activate( V, textParms=['textRenderer'] )
-        if not dimensioning.assignedPrefenceValues:
-            tR = dimensioning.dimensionConstructorKWs['textRenderer']
-            widgets = dict( [c.objectName(), c] for c in dialog.children() )
-            widgets['sizeLineEdit'].setText( tR.font_size )
-            widgets['colorLineEdit'].setText(  tR.fill )
-            widgets['familyLineEdit'].setText( tR.font_family )
-            dimensioning.assignedPrefenceValues = True
-        dialog.show()
+        V = getDrawingPageGUIVars() 
+        d.activate( V,  dialogTitle='Add Text', dialogIconPath=os.path.join( iconPath , 'textAdd.svg' ), endFunction=self.Activated )
+        previewDimension.initializePreview( d, addText_preview, addText_clickHandler)
         
     def GetResources(self): 
         return {
@@ -83,6 +55,6 @@ class AddText:
             'MenuText': 'Add text to drawing', 
             'ToolTip': 'Add text to drawing'
             } 
-FreeCADGui.addCommand('textAddDimensioning', AddText())
+FreeCADGui.addCommand('dd_addText', AddText())
 
 

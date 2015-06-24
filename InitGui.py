@@ -52,7 +52,6 @@ static char * linearDimension_xpm[] = {
         import importlib, os
         from dimensioning import __dir__, debugPrint, iconPath
         import linearDimension
-        import halfLinearDimension
         import deleteDimension
         import circularDimension
         import grabPointAdd
@@ -68,35 +67,36 @@ static char * linearDimension_xpm[] = {
         import noteCircle
         import toleranceAdd
         commandslist = [
-            'linearDimension',
-            'halfLinearDimension',
-            'circularDimension',
-            'radiusDimension',
-            'radiusDimensionInner',
-            'angularDimension',
-            'angleFrom3PointsDimension',
-            'DrawingDimensioning_centerLines',
-            'DrawingDimensioning_centerLine', 
-            'noteCircle', 
-            'grabPoint',
-            'textAddDimensioning',
-            'textEditDimensioning',
-            'textMoveDimensioning',
-            'toleranceAdd', 
-            'deleteDimension', 
-            'escapeDimensioning',
+            'dd_linearDimension', #where dd is short-hand for drawing dimensioning
+            'dd_circularDimension',
+            'dd_radiusDimension',
+            'dd_radiusDimensionInner',
+            'dd_angularDimension',
+            'dd_angleFrom3PointsDimension',
+            'dd_centerLines',
+            'dd_centerLine', 
+            'dd_noteCircle', 
+            'dd_grabPoint',
+            'dd_addText',
+            'dd_editText',
+            'dd_moveText',
+            'dd_addTolerance', 
+            'dd_deleteDimension', 
+            'dd_escapeDimensioning',
             ]
         self.appendToolbar('Drawing Dimensioning', commandslist)
         import unfold
         import unfold_bending_note
         import unfold_export_to_dxf
-        self.appendToolbar('Drawing Dimensioning Folding', [
-                'drawingDimensioning_unfold',
-                'drawingDimensioning_bendingNote',
-                'drawingDimensioning_exportToDxf',
-                ])
+        unfold_cmds = [
+            'dd_unfold',
+            'dd_bendingNote',
+            ]
+        if hasattr(os,'uname') and os.uname()[0] == 'Linux' : #this command only works on Linux systems
+            unfold_cmds.append('dd_exportToDxf')
+        self.appendToolbar( 'Drawing Dimensioning Folding', unfold_cmds )
         self.appendToolbar('Drawing Dimensioning Help', [
-                'drawingDimensioning_help',
+                'dd_help',
                 ])
         import weldingSymbols
         self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingSymbols.weldingCmds)

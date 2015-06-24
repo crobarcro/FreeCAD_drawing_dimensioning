@@ -1,15 +1,41 @@
 
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
-import selectionOverlay 
+import selectionOverlay, previewDimension 
 
-dimensioning = DimensioningProcessTracker()
+d = DimensioningProcessTracker()
 
 def deleteDimension( event, referer, elementXML, elementParms, elementViewObject ):
     debugPrint(2, 'deleting dimension %s' % elementViewObject.Name)
     App.ActiveDocument.removeObject( elementViewObject.Name )
-    recomputeWithOutViewReset(dimensioning.drawingVars)
+    recomputeWithOutViewReset(d.drawingVars)
+    FreeCADGui.Control.closeDialog()
+    if d.endFunction <> None:
+        previewDimension.preview.dimensioningProcessTracker = d
+        previewDimension.timer.start( 1 )
 
+class deleteAllButton:
+    def deleteAllDimensions( self, arg1=None):
+        try :
+            reply = QtGui.QMessageBox.question(
+                QtGui.qApp.activeWindow(), "Confirm Delete All",
+                "Delete all dimension objects?\n(this action can not be undone)", 
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+            if reply == QtGui.QMessageBox.Yes:
+                debugPrint(2,'Deleting all dimensioning objects')
+                #FreeCAD.ActiveDocument.openTransaction("Delete All Dim. Objects")
+                for obj in d.drawingVars.page.Group:
+                    if any( obj.Name.startswith(prefix) for prefix in ['dim','grabPoint','center','unfold']):
+                        App.ActiveDocument.removeObject( obj.Name )
+            #FreeCAD.ActiveDocument.commitTransaction()# ah undo not working ...
+            recomputeWithOutViewReset(d.drawingVars)
+            FreeCADGui.Control.closeDialog()
+        except:
+            errorMessagebox_with_traceback()
+    def generateWidget( self, dimensioningProcess ):
+        button = QtGui.QPushButton('Delete All')
+        button.clicked.connect( self.deleteAllDimensions )
+        return button
+d.dialogWidgets.append( deleteAllButton() )
 
 maskBrush  =   QtGui.QBrush( QtGui.QColor(160,0,0,100) )
 maskPen =      QtGui.QPen( QtGui.QColor(160,0,0,100) )
@@ -20,7 +46,7 @@ maskHoverPen.setWidth(0.0)
 class DeleteDimension:
     def Activated(self):
         V = getDrawingPageGUIVars()
-        dimensioning.activate(V)
+        d.activate(V, dialogTitle='Delete Dimension', dialogIconPath=os.path.join( iconPath , 'deleteDimension.svg' ), endFunction=self.Activated)
         commonArgs = dict( 
             onClickFun=deleteDimension,
             sceneToAddTo = V.graphicsScene, 
@@ -31,7 +57,7 @@ class DeleteDimension:
             maskBrush = maskBrush
             )
         selectionOverlay.generateSelectionGraphicsItems( 
-            [obj for obj in V.page.Group  if obj.Name.startswith('dim')], 
+            [obj for obj in V.page.Group  if obj.Name.startswith('dim') or obj.Name.startswith('grabPoint')], 
             doSelectViewObjectPoints = True, 
             **commonArgs)
         selectionOverlay.generateSelectionGraphicsItems( 
@@ -48,4 +74,4 @@ class DeleteDimension:
             'ToolTip': 'Delete a dimension'
             } 
 
-FreeCADGui.addCommand('deleteDimension', DeleteDimension())
+FreeCADGui.addCommand('dd_deleteDimension', DeleteDimension())

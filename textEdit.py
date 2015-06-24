@@ -13,22 +13,21 @@ dialog.show()
 '''
 
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
 import selectionOverlay 
 import textAddDialog
-import XMLlib
 from textSvg import SvgTextParser
+import previewDimension
 
-dimensioning = DimensioningProcessTracker()
+d = DimensioningProcessTracker()
 
 def EditDimensionText( event, referer, elementXML, elementParms, elementViewObject ):
-    dimensioning.dimToEdit = elementViewObject    
-    dimensioning.elementXML = elementXML
+    d.dimToEdit = elementViewObject    
+    d.elementXML = elementXML
     selectionOverlay.hideSelectionGraphicsItems()
     e = elementXML
     debugPrint(3, e.XML[e.pStart:e.pEnd] )
     svgText = SvgTextParser( e.XML[e.pStart:e.pEnd] )
-    dimensioning.svgText = svgText
+    d.svgText = svgText
     debugPrint(3, u'editing %s' % unicode(svgText))
     widgets = dict( [c.objectName(), c] for c in dialog.children() )
     widgets['textLineEdit'].setText( svgText.text )
@@ -49,23 +48,27 @@ class EditTextDialogWidget( QtGui.QWidget ):
             debugPrint(1, 'Aborting placing empty text.')
             return
         self.hide()
-        svgText = dimensioning.svgText 
+        svgText = d.svgText 
         svgText.text = widgets['textLineEdit'].text()
         widgets['textLineEdit'].setText('')
         svgText.font_size = widgets['sizeLineEdit'].text()
         svgText.font_family = widgets['familyLineEdit'].text()
         svgText.fill = widgets['colorLineEdit'].text()
         svgText.rotation =  widgets['doubleSpinBox_rotation'].value()
-        debugPrint(3,'updating XML in %s to' % dimensioning.dimToEdit.Name)
+        debugPrint(3,'updating XML in %s to' % d.dimToEdit.Name)
         xml = svgText.toXML()
         debugPrint(4,xml)
-        e =  dimensioning.elementXML
+        e =  d.elementXML
         newXML = e.XML[:e.pStart] + xml + e.XML[e.pEnd:]
         debugPrint(3,newXML)
-        dimensioning.dimToEdit.ViewResult = newXML
-        recomputeWithOutViewReset(dimensioning.drawingVars)
+        d.dimToEdit.ViewResult = newXML
+        recomputeWithOutViewReset(d.drawingVars)
+        if d.taskDialog <> None: #unessary check
+            FreeCADGui.Control.closeDialog()
+        if d.endFunction <> None:
+            previewDimension.preview.dimensioningProcessTracker = d
+            previewDimension.timer.start( 100 ) # 100 ms, need some time for dialog to close
         
-
 dialog = EditTextDialogWidget()
 dialogUi = textAddDialog.Ui_Dialog()
 dialogUi.setupUi(dialog)
@@ -78,8 +81,8 @@ maskHoverPen.setWidth(0.0)
 
 class EditText:
     def Activated(self):
-        V = getDrawingPageGUIVars() #needs to be done before dialog show, else Qt active is dialog and not freecads
-        dimensioning.activate( V )
+        V = getDrawingPageGUIVars()
+        d.activate( V, dialogTitle='Edit Text', dialogIconPath=os.path.join( iconPath , 'textEdit.svg' ), endFunction=self.Activated  )
         selectGraphicsItems = selectionOverlay.generateSelectionGraphicsItems( 
             [obj for obj in V.page.Group  if obj.Name.startswith('dim')], 
             EditDimensionText , 
@@ -99,6 +102,6 @@ class EditText:
             'MenuText': msg, 
             'ToolTip': msg
             } 
-FreeCADGui.addCommand('textEditDimensioning', EditText())
+FreeCADGui.addCommand('dd_editText', EditText())
 
 
