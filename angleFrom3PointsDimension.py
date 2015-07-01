@@ -1,4 +1,4 @@
-
+# This Python file uses the following encoding: utf-8
 from dimensioning import *
 from dimensioning import iconPath # not imported with * directive
 import selectionOverlay, previewDimension
