@@ -53,10 +53,11 @@ def getDrawingPageGUIVars():
     # To find the page we are on, we get all the pages which have the same label as
     # the current object. In theory there should therefore only be one page in the list
     # returned by getObjectsByLabel, so we'll just take the first in the list
-    pages = App.ActiveDocument.getObjectsByLabel( subWinMW.objectName() )
+    pages = App.ActiveDocument.getObjectsByLabel( subWinMW.objectName().encode('utf8'))
 
     # raise an error explaining that the page wasn't found if the list is empty
     if len(pages) <> 1:
+        QtGui.QMessageBox.information( QtGui.qApp.activeWindow(), notDrawingPage_title, notDrawingPage_msg  )
         raise ValueError, notDrawingPage_title
 
     # get the page from the list
@@ -227,6 +228,31 @@ class DimensioningPreference_unicode(DimensioningPreference_prototype):
         self.textbox = textbox
         return  DimensioningTaskDialog_generate_row_hbox( self.label, textbox )
 DimensioningPreferenceClasses["<type 'unicode'>"] = DimensioningPreference_unicode
+
+class DimensioningPreference_choice(DimensioningPreference_unicode):
+    def valueChanged( self, value ):
+        self.dimensioningProcess.dimensionConstructorKWs[ self.name ] = self.combobox.currentText()
+    def getDefaultValue(self):
+        encoded_value = self.dd_parms.GetString( self.name, self.defaultValue[0].encode('utf8') ) 
+        return unicode( encoded_value, 'utf8' )
+    def revertToDefault( self ):
+        try:
+            combobox.setCurrentIndex( self.defaultValue.index(self.getDefaultValue()) )
+        except IndexError:
+            pass
+    def generateWidget( self, dimensioningProcess ):
+        self.dimensioningProcess = dimensioningProcess
+        combobox = QtGui.QComboBox()
+        for i in self.defaultValue:
+            combobox.addItem(i)
+        try:
+            combobox.setCurrentIndex( self.defaultValue.index(self.getDefaultValue()) )
+        except IndexError:
+            pass
+        combobox.currentIndexChanged.connect( self.valueChanged )
+        self.combobox = combobox
+        return  DimensioningTaskDialog_generate_row_hbox( self.label, combobox )
+DimensioningPreferenceClasses["choice"] = DimensioningPreference_choice
 
 class DimensioningPreference_boolean(DimensioningPreference_prototype):
     def valueChanged( self, arg1):
@@ -414,16 +440,16 @@ class DimensioningTaskDialog:
         if iconPath <> None:
             self.form.setWindowIcon( QtGui.QIcon( iconPath ) )
 
-    def accept(self):
-        self.reject()
-
-    def reject(self):
+    def reject(self): #close button
         import previewDimension
         if hasattr(previewDimension.preview, 'drawingVars'):
             previewDimension.removePreviewGraphicItems( recomputeActiveDocument = True )
         else:
             recomputeWithOutViewReset(self.dimensiongProcess.drawingVars )
             FreeCADGui.Control.closeDialog()
+    def getStandardButtons(self): #http://forum.freecadweb.org/viewtopic.php?f=10&t=11801
+        return 0x00200000 #close button
+
 
 class DimensioningTaskDialogForm(QtGui.QWidget):
     
@@ -504,6 +530,8 @@ def recomputeWithOutViewReset( drawingVars ):
     #centerOn approach did not work rather using scroll bars.
     h_scrollValue = gV.horizontalScrollBar().value()
     v_scrollValue = gV.verticalScrollBar().value()
+    import selectionOverlay
+    selectionOverlay.hideSelectionGraphicsItems()    
     drawingVars.page.touch()
     App.ActiveDocument.recompute()
     gV.scale( scale , scale )

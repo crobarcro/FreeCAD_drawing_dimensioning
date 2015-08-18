@@ -52,6 +52,7 @@ static char * linearDimension_xpm[] = {
         import importlib, os
         from dimensioning import __dir__, debugPrint, iconPath
         import linearDimension
+        import linearDimension_stack
         import deleteDimension
         import circularDimension
         import grabPointAdd
@@ -68,6 +69,7 @@ static char * linearDimension_xpm[] = {
         import toleranceAdd
         commandslist = [
             'dd_linearDimension', #where dd is short-hand for drawing dimensioning
+            'dd_linearDimensionStack',
             'dd_circularDimension',
             'dd_radiusDimension',
             'dd_radiusDimensionInner',
@@ -95,11 +97,13 @@ static char * linearDimension_xpm[] = {
         if hasattr(os,'uname') and os.uname()[0] == 'Linux' : #this command only works on Linux systems
             unfold_cmds.append('dd_exportToDxf')
         self.appendToolbar( 'Drawing Dimensioning Folding', unfold_cmds )
-        self.appendToolbar('Drawing Dimensioning Help', [
-                'dd_help',
-                ])
         import weldingSymbols
-        self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingSymbols.weldingCmds)
+        if int( FreeCAD.Version()[1] > 15 ) and  int( FreeCAD.Version()[2].split()[0] ) > 5165:
+            weldingCommandList = ['dd_weldingGroupCommand']
+        else:
+            weldingCommandList = weldingSymbols.weldingCmds
+        self.appendToolbar('Drawing Dimensioning Welding Symbols', weldingCommandList)
+        self.appendToolbar('Drawing Dimensioning Help', [ 'dd_help' ])
         FreeCADGui.addIconPath(iconPath)
         FreeCADGui.addPreferencePage( os.path.join( __dir__, 'Resources', 'ui', 'drawing_dimensioing_prefs-base.ui'),'Drawing Dimensioning' )
 
