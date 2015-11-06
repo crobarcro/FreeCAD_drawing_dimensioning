@@ -176,7 +176,7 @@ class radiusDimensionInner:
 
     def GetResources(self):
         return {
-            'Pixmap' : ':/dd/icons/radiusDimensionInner.svg' ) ,
+            'Pixmap' : ':/dd/icons/radiusDimensionInner.svg',
             'MenuText': 'Radius Dimension',
             'ToolTip': 'Creates an internal radius dimension'
             }

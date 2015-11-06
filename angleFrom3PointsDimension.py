@@ -170,7 +170,7 @@ class angleFrom3PointsDimension:
 
     def GetResources(self):
         return {
-            'Pixmap' : ':/dd/icons/angleFrom3PointsDimension.svg' ) ,
+            'Pixmap' : ':/dd/icons/angleFrom3PointsDimension.svg' ,
             'MenuText': 'Angular Dimension From Points',
             'ToolTip': 'Creates an angular dimension from 3 points'
             }
