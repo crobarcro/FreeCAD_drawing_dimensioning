@@ -1,6 +1,5 @@
 
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
 import selectionOverlay, previewDimension
 from dimensionSvgConstructor import *
 
@@ -177,7 +176,7 @@ class radiusDimensionInner:
 
     def GetResources(self):
         return {
-            'Pixmap' : os.path.join( iconPath , 'radiusDimensionInner.svg' ) ,
+            'Pixmap' : ':/dd/icons/radiusDimensionInner.svg' ) ,
             'MenuText': 'Radius Dimension',
             'ToolTip': 'Creates an internal radius dimension'
             }

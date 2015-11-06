@@ -1,6 +1,5 @@
 # This Python file uses the following encoding: utf-8
 from dimensioning import *
-from dimensioning import iconPath # not imported with * directive
 import selectionOverlay, previewDimension
 from dimensionSvgConstructor import *
 
@@ -171,7 +170,7 @@ class angleFrom3PointsDimension:
 
     def GetResources(self):
         return {
-            'Pixmap' : os.path.join( iconPath , 'angleFrom3PointsDimension.svg' ) ,
+            'Pixmap' : ':/dd/icons/angleFrom3PointsDimension.svg' ) ,
             'MenuText': 'Angular Dimension From Points',
             'ToolTip': 'Creates an angular dimension from 3 points'
             }

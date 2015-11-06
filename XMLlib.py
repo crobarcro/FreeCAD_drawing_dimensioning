@@ -137,7 +137,8 @@ class SvgXMLTreeNode:
                     sx, sy = scaleParms[0], scaleParms[0]
             if 'matrix(' in self.header: #"matrix(1.25,0,0,-1.25,-348.3393,383.537)"
                 sx, shear_1, shear_2, sy, tx, ty = map(float, extractParms(self.header, 0, 'matrix(', ', ', ')'))
-                assert shear_1 == 0 and shear_2 == 0
+                if not shear_1 == 0 and shear_2 == 0:
+                    raise NotImplementedError, " not shear_1 == 0 and shear_2 == 0! header %s" % self.header 
         p = numpy.array( [sx*x + tx, sy*y + ty] )
         point = dot(R, p-r_o) +r_o
         if self.parent <> None:
@@ -154,6 +155,25 @@ class SvgXMLTreeNode:
         else:
             sx_child = 1.0
         return sx * sx_child
+
+    def scaling2(self, s=1.0):
+        'other scaling works only for drawingObject.ViewResult groups...'
+        if 'transform=' in self.header:
+            if 'scale(' in self.header:
+                scaleParms = map(float, extractParms(self.header, 0, 'scale(', ', ', ')'))
+                if len(scaleParms) == 2:
+                    sx, sy = scaleParms
+                else:
+                    sx, sy = scaleParms[0], scaleParms[0]
+                s = s * sx
+            elif 'matrix(' in self.header: #"matrix(1.25,0,0,-1.25,-348.3393,383.537)"
+                sx, shear_1, shear_2, sy, tx, ty = map(float, extractParms(self.header, 0, 'matrix(', ', ', ')'))
+                assert shear_1 == 0 and shear_2 == 0
+                s = s *sx
+        if self.parent <> None:
+            return self.parent.scaling2(s)
+        else:
+            return s
             
     def getAllElements(self):
         return [self] + sum([c.getAllElements() for c in self.children],[])

@@ -264,7 +264,14 @@ class pCircularArc:
         if self.points[0] <> self.points[-1]:
             r = self.radius
             largeArc = False #abs(dEnd - dStart) >= pi #given the construction method
-            sweep = True #given the construction method
+            #determine sweep flag
+            p1, p2 = self.points[:2]
+            angle1 = arctan2( p1.y-self.center.y , p1.x-self.center.x )
+            angle2 = arctan2( p2.y-self.center.y , p2.x-self.center.x )
+            if abs(angle1 - angle2) < pi/2: # has not crossed pi/2 or -pi/2 mark
+                sweep = angle1 < angle2
+            else:
+                sweep = angle1 < 0
             return ' '.join( ['<path d = "M %f %f A %f %f 0 %i %i %f %f" style="stroke:%s;stroke-width:%1.2f;fill:none" />' % (p1.x, p1.y,r,r,largeArc,sweep, p2.x, p2.y, lineColor, strokeWidth ) for p1,p2 in zip(self.points[:-1], self.points[1:]) ] )
         else:
             return '<circle cx="%f" cy="%f" r="%f" stroke="%s" stroke-width="%1.2f" fill="none" />' % (self.center.x, self.center.y, self.radius, lineColor,  strokeWidth)
@@ -304,7 +311,7 @@ class UnfoldCommand:
             QtGui.QMessageBox.information(  QtGui.qApp.activeWindow(), "Info", 'Please select touching faces from the same shape')
     def GetResources(self): 
         return {
-            'Pixmap' : os.path.join( iconPath, 'unfold.svg' ) , 
+            'Pixmap' : ':/dd/icons/unfold.svg', 
             'MenuText': 'Unfold faces', 
             'ToolTip': 'Unfold faces'
             } 
@@ -314,8 +321,8 @@ FreeCADGui.addCommand('dd_unfold', UnfoldCommand())
 class UnfoldTaskPanel:
     'based on FreeCAD_sf_master/src/Mod/PartDesign/InvoluteGearFeature.py'
     def __init__(self):
-        self.form = FreeCADGui.PySideUic.loadUi( os.path.join(__dir__,"unfold.ui") )
-        self.form.setWindowIcon(QtGui.QIcon( os.path.join( iconPath, 'unfold.svg' ) ) )
+        self.form = FreeCADGui.PySideUic.loadUi( ':/dd/ui/unfold.ui' )
+        self.form.setWindowIcon( QtGui.QIcon( ':/dd/icons/unfold.svg' ) )
 
         #self.form.doubleSpinBox_scale.setValue(d.svgScale)
         #self.form.doubleSpinBox_rotation.setValue(d.svgRotation)

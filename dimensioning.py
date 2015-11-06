@@ -2,11 +2,15 @@ import numpy
 import FreeCAD as App
 import FreeCAD, FreeCADGui, Part, os
 from PySide import QtGui, QtCore, QtSvg
-from textSvg import SvgTextRenderer, SvgTextParser
+from svgLib_dd import SvgTextRenderer, SvgTextParser
 import traceback
+from grid_dd import gridOptionsGroupBox, dimensioningGrid
 
 __dir__ = os.path.dirname(__file__)
-iconPath = os.path.join( __dir__, 'Resources', 'icons' )
+iconPath = os.path.join( __dir__, 'Gui','Resources', 'icons' )
+path_dd_resources =  os.path.join( os.path.dirname(__file__), 'Gui', 'Resources', 'dd_resources.rcc')
+resourcesLoaded = QtCore.QResource.registerResource(path_dd_resources)
+assert resourcesLoaded
 
 def debugPrint( level, msg ):
     if level <= debugPrint.level:
@@ -109,13 +113,15 @@ class DimensioningProcessTracker:
     def __init__(self):
         self.dialogWidgets = []
         self.preferences = []
-    def activate( self, drawingVars, dialogTitle=None, dialogIconPath=None, endFunction=None):
+    def activate( self, drawingVars, dialogTitle=None, dialogIconPath=None, endFunction=None, grid=True):
         self.drawingVars = drawingVars
         self.endFunction = endFunction
         extraWidgets = []
         if self.endFunction <> None:
             endFunction_parm_name = 'repeat_' + str(endFunction).split()[2]
             extraWidgets.append( RepeatCheckBox(self, endFunction_parm_name) )
+            if grid:
+               extraWidgets.append( gridOptionsGroupBox )
         self.stage = 0
         KWs = {}
         for pref in self.preferences:
@@ -126,6 +132,8 @@ class DimensioningProcessTracker:
             FreeCADGui.Control.showDialog( self.taskDialog )
         else:
             self.taskDialog = None
+        if grid:
+            dimensioningGrid.initialize( drawingVars )
 
     def registerPreference( self, name, defaultValue=None, label=None, kind='guess', **extraKWs):
         if not dimensioningPreferences.has_key(name):
@@ -378,6 +386,7 @@ class UnitSelectionWidget:
     def __init__(self):
         self.unitSelected_combobox_index = 0
         self.customScaleValue = 1.0
+        self.dd_parms = App.ParamGet("User parameter:BaseApp/Preferences/Mod/Drawing_Dimensioning")
     def settingsChanged(self, notUsed=False):
         unit_text = self.unitSelected_combobox.currentText()
         self.unitSelected_combobox_index = self.unitSelected_combobox.currentIndex()
@@ -398,9 +407,20 @@ class UnitSelectionWidget:
             self.customScaleValue = v
         self.dimensioningProcess.unitConversionFactor = 1.0/v if v <> 0 else 1.0
 
+    def groupBoxToggled( self, checked):
+        self.dd_parms.SetBool("show_unit_options", checked)
+        self.groupbox.setMaximumHeight(1000 if checked else 18)
+
     def generateWidget(self, dimensioningProcess):
         self.dimensioningProcess = dimensioningProcess
-        groupbox = QtGui.QGroupBox("Units")
+        groupbox = QtGui.QGroupBox("Unit Options")
+        groupbox.setCheckable( True ) 
+        groupbox.toggled.connect( self.groupBoxToggled )
+        self.groupbox = groupbox
+        checked = self.dd_parms.GetBool("show_unit_options",True)
+        groupbox.setChecked(checked)
+        #self.groupBoxToggled( checked )
+        #groupbox.setCheckState( QtCore.Qt.CheckState.Checked )
         vbox = QtGui.QVBoxLayout()
         unitSelected = QtGui.QComboBox()
         unitSelected.addItem('Edit->Preference->Unit')
@@ -508,8 +528,6 @@ class DimensioningTaskDialogForm(QtGui.QWidget):
 
 
 
-
-
 def recomputeWithOutViewReset( drawingVars ):
     '''
     By default app.recompute() resets the drawing view, which can be rather frustrating...
@@ -589,7 +607,7 @@ class helpCommand:
 - https://www.youtube.com/watch?v=ztMTLp4wZx4 '''  )
     def GetResources(self): 
         return {
-            'Pixmap' : os.path.join( iconPath , 'help.svg' ) , 
+            'Pixmap' : ':/dd/icons/help.svg', 
             'MenuText': 'Help', 
             'ToolTip': 'Help'
             } 
